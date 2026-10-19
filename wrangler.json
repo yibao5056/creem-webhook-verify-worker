@@ -1,0 +1,19 @@
+{
+  "name": "creem-webhook-verify",
+  "main": "worker.js",
+  "compatibility_date": "2026-10-19",
+  "observability": {
+    "enabled": true,
+    "traces": {
+      "enabled": true
+    }
+  },
+  "env": {
+    "test": {
+      "name": "creem-webhook-verify-test"
+    },
+    "live": {
+      "name": "creem-webhook-verify-live"
+    }
+  }
+}
