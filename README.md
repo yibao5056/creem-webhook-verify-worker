@@ -28,10 +28,10 @@ They verify JavaScript logic, not a Cloudflare deployment, real Creem checkout o
 
 ## Try the local Workers runtime
 
-Use Node 22+ and npm. The pinned CLI below is the version used to build this example:
+Use Node 22+ and npm. The pinned CLI below is also used by CI. Earlier instructions used Wrangler 4.143.0, whose bundled runtime cannot start this example's 2026-10-19 compatibility date:
 
 ```sh
-npx wrangler@4.143.0 dev --var CREEM_WEBHOOK_SECRET:public-test-placeholder
+npx wrangler@4.151.3 dev --var CREEM_WEBHOOK_SECRET:public-test-placeholder
 # In another terminal, from the same directory:
 bash test.sh
 ```
@@ -46,7 +46,7 @@ Stop the local server before using real endpoint secrets. Never register the pub
 
 [Open the public check runs](https://github.com/yibao5056/creem-webhook-verify-worker/actions/workflows/verify.yml) and select a run to see its exact commit and logs. The workflow runs on pushes to `main`, pull requests targeting `main`, and manual dispatch. The badge shows the latest `main` result, not a guarantee about every downloaded revision.
 
-It runs the existing **49 offline checks**, then starts a temporary, loopback-only Workers runtime and runs **40 HTTP checks**. Node is pinned to 24.21.0, Wrangler to 4.143.0, and the two official setup actions to full commit hashes. npm still resolves Wrangler's transitive dependencies at installation time; this is not a fully locked toolchain. The runner needs network access to install tools.
+It runs the existing **49 offline checks**, then starts a temporary, loopback-only Workers runtime and runs **40 HTTP checks**. Node is pinned to 24.21.0, Wrangler to 4.151.3, and the two official setup actions to full commit hashes. npm still resolves Wrangler's transitive dependencies at installation time; this is not a fully locked toolchain. The runner needs network access to install tools.
 
 The standard Ubuntu runner uses only the public synthetic placeholder and a read-only repository token for checkout; checkout does not persist that token. No Cloudflare or Creem credentials, remote bindings or deployment are used. Startup readiness, each HTTP request, the test commands and the job are bounded. The HTTP step verifies process-group cleanup on ordinary exit and handled interrupts; an abrupt hard kill relies on GitHub discarding the temporary runner. A failed check makes the job fail. No Actions cache or downloadable workflow artifact is uploaded.
 
@@ -61,13 +61,13 @@ The example config has separate `test` and `live` Worker names. Rename both to u
 2. Deploy the test Worker (it returns 503 until configured):
 
    ```sh
-   npx wrangler@4.143.0 deploy --env test
+   npx wrangler@4.151.3 deploy --env test
    ```
 
 3. In the Creem dashboard, select **Test Mode**, add the deployed test Worker's HTTPS URL plus `/webhooks/creem`, and select `checkout.completed`. Obtain that endpoint's signing secret there, then enter it through the interactive prompt:
 
    ```sh
-   npx wrangler@4.143.0 secret put CREEM_WEBHOOK_SECRET --env test
+   npx wrangler@4.151.3 secret put CREEM_WEBHOOK_SECRET --env test
    ```
 
    This is the **webhook signing secret**, not a Creem API key. Do not put it in arguments, screenshots, source or Git. Ignore local `.dev.vars`/`.env` files; a test value must not leak into your live environment.

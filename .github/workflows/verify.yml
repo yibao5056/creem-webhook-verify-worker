@@ -39,7 +39,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p "$RUNNER_TEMP/verifier-tools"
-          npm install --prefix "$RUNNER_TEMP/verifier-tools" --no-save --package-lock=false --no-audit --no-fund wrangler@4.143.0
+          npm install --prefix "$RUNNER_TEMP/verifier-tools" --no-save --package-lock=false --no-audit --no-fund wrangler@4.151.3
       - name: Check local Workers HTTP
         shell: bash
         timeout-minutes: 5
