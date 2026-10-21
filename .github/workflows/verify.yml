@@ -1,0 +1,112 @@
+name: Verify example
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verifier-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Offline logic and local Workers HTTP
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      CI: "true"
+      WRANGLER_SEND_METRICS: "false"
+    steps:
+      - name: Check out this commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24.21.0"
+          package-manager-cache: false
+      - name: Check offline logic
+        shell: bash
+        run: timeout --signal=TERM --kill-after=5s 60s node --no-warnings test.mjs
+      - name: Install the pinned local runtime CLI
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/verifier-tools"
+          npm install --prefix "$RUNNER_TEMP/verifier-tools" --no-save --package-lock=false --no-audit --no-fund wrangler@4.143.0
+      - name: Check local Workers HTTP
+        shell: bash
+        timeout-minutes: 5
+        run: |
+          set -euo pipefail
+          # Refuse an occupied port instead of accidentally testing another server.
+          python3 - <<'PY'
+          import socket
+          with socket.socket() as listener:
+              listener.bind(('127.0.0.1', 8787))
+          PY
+
+          runtime_log="$RUNNER_TEMP/verifier-runtime.log"
+          ready_body="$RUNNER_TEMP/verifier-ready.txt"
+          server_pid=''
+          test_pid=''
+          cleanup() {
+            result=$?
+            trap - EXIT
+            for owned_pid in "$test_pid" "$server_pid"; do
+              [[ -n "$owned_pid" ]] || continue
+              kill -TERM -- "-$owned_pid" 2>/dev/null || true
+              for _ in {1..50}; do
+                kill -0 -- "-$owned_pid" 2>/dev/null || break
+                sleep 0.1
+              done
+              kill -KILL -- "-$owned_pid" 2>/dev/null || true
+              wait "$owned_pid" 2>/dev/null || true
+              if ps -eo pgid=,stat= | awk -v group="$owned_pid" '$1 == group && $2 !~ /^Z/ { live=1 } END { exit live }'; then
+                echo 'Local cleanup: no live group members; launcher reaped.'
+              else
+                echo 'Runtime cleanup could not confirm termination.'
+                result=1
+              fi
+            done
+            if [[ "$result" != 0 && -f "$runtime_log" ]]; then
+              cat "$runtime_log"
+            fi
+            exit "$result"
+          }
+          trap cleanup EXIT
+          trap 'exit 130' INT
+          trap 'exit 143' TERM
+
+          setsid "$RUNNER_TEMP/verifier-tools/node_modules/.bin/wrangler" dev \
+            --config wrangler.json --local --ip 127.0.0.1 --port 8787 \
+            --inspector-port 0 --show-interactive-dev-session=false \
+            --var CREEM_WEBHOOK_SECRET:public-test-placeholder > "$runtime_log" 2>&1 &
+          server_pid=$!
+
+          ready=false
+          for _ in {1..30}; do
+            kill -0 "$server_pid" 2>/dev/null || { echo 'Runtime exited before readiness.'; exit 1; }
+            status=$(curl --noproxy '*' --silent --show-error --connect-timeout 1 --max-time 2 \
+              --request POST --output "$ready_body" --write-out '%{http_code}' \
+              http://127.0.0.1:8787/webhooks/creem 2>/dev/null) || status='unavailable'
+            if [[ "$status" == 401 && "$(cat "$ready_body")" == 'bad signature' ]]; then
+              ready=true
+              break
+            fi
+            sleep 1
+          done
+          [[ "$ready" == true ]] || { echo 'Runtime readiness timed out.'; exit 1; }
+          kill -0 "$server_pid"
+          # A background wait is interruptible, unlike a foreground command
+          # that can defer Bash's signal trap until the test eventually exits.
+          setsid timeout --signal=TERM --kill-after=5s 120s bash test.sh http://127.0.0.1:8787 &
+          test_pid=$!
+          wait "$test_pid"
+          kill -0 "$server_pid"

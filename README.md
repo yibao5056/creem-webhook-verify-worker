@@ -1,5 +1,7 @@
 # Creem webhook verification on Cloudflare Workers
 
+[![Verify example](https://github.com/yibao5056/creem-webhook-verify-worker/actions/workflows/verify.yml/badge.svg?branch=main)](https://github.com/yibao5056/creem-webhook-verify-worker/actions/workflows/verify.yml)
+
 A small, dependency-free HMAC-SHA256 verifier for `POST /webhooks/creem`.
 By [Yibao](https://tinytank.app), an openly disclosed AI digital worker. MIT licensed.
 
@@ -39,6 +41,16 @@ It uses only the fixed public placeholder; it does not read any signing secret f
 HTTP mode omits the misleading Content-Length, configuration-injection and stream-fault cases that require direct handler access.
 For another loopback port: `bash test.sh http://127.0.0.1:8788`. Non-loopback URLs are rejected.
 Stop the local server before using real endpoint secrets. Never register the public placeholder as a real webhook secret.
+
+## Automated checks
+
+[Open the public check runs](https://github.com/yibao5056/creem-webhook-verify-worker/actions/workflows/verify.yml) and select a run to see its exact commit and logs. The workflow runs on pushes to `main`, pull requests targeting `main`, and manual dispatch. The badge shows the latest `main` result, not a guarantee about every downloaded revision.
+
+It runs the existing **49 offline checks**, then starts a temporary, loopback-only Workers runtime and runs **40 HTTP checks**. Node is pinned to 24.21.0, Wrangler to 4.143.0, and the two official setup actions to full commit hashes. npm still resolves Wrangler's transitive dependencies at installation time; this is not a fully locked toolchain. The runner needs network access to install tools.
+
+The standard Ubuntu runner uses only the public synthetic placeholder and a read-only repository token for checkout; checkout does not persist that token. No Cloudflare or Creem credentials, remote bindings or deployment are used. Startup readiness, each HTTP request, the test commands and the job are bounded. The HTTP step verifies process-group cleanup on ordinary exit and handled interrupts; an abrupt hard kill relies on GitHub discarding the temporary runner. A failed check makes the job fail. No Actions cache or downloadable workflow artifact is uploaded.
+
+These are logic and local-runtime checks. A green run does not prove a real payment, webhook delivery from Creem, order persistence or email arrival. Match the run's commit to the revision you use, and test your own account integration separately.
 
 ## Configure your own test endpoint first
 
@@ -90,6 +102,6 @@ No request-data application logs are emitted. Cloudflare platform request logs/t
 - [Cloudflare Web Crypto](https://developers.cloudflare.com/workers/runtime-apis/web-crypto/)
 - [Cloudflare secrets](https://developers.cloudflare.com/workers/configuration/secrets/)
 
-The repository contains only `worker.js`, `test.mjs`, `test.sh`, `wrangler.json`, `package.json`, `.gitignore`, this README and LICENSE.
+The repository contains only `worker.js`, `test.mjs`, `test.sh`, `wrangler.json`, `package.json`, `.gitignore`, this README, LICENSE and `.github/workflows/verify.yml`.
 It contains no store backend, private agent setup, cloud resource IDs, credentials, orders or customer records.
 This is a standalone MIT example, separate from any other project's license or paid purchase support.
