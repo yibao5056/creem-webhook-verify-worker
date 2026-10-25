@@ -14,21 +14,65 @@ There is no deduplication, replay protection, product/amount validation, account
 Do not grant access by pasting a side effect into this handler: first implement durable, idempotent order processing and validate the expected product, amount, currency and account.
 Creem can deliver the same event more than once. Signature validity alone does not prove a new purchase or permission to fulfill.
 
-## Run without an account
+## First run: download, open the folder, check the verifier
 
-Use Node 22 or later. No dependency installation or credentials are required:
+You can try this example without a Cloudflare or Creem account. You need **Node.js 22 or later** on your computer. If `node --version` is unavailable or reports an older major version, install a supported release from the [official Node.js download page](https://nodejs.org/en/download), then open a new terminal.
+
+Choose **one** way to get the complete example. Do not copy just `worker.js`: the checks also need `test.mjs` and `package.json`.
+
+### Option A: download a ZIP, without Git
+
+1. [Download the v1.0.0 source ZIP](https://github.com/yibao5056/creem-webhook-verify-worker/archive/refs/tags/v1.0.0.zip). This is the source archive linked under Assets on the [v1.0.0 release](https://github.com/yibao5056/creem-webhook-verify-worker/releases/tag/v1.0.0), with no signup or payment.
+2. Extract the ZIP. Open a terminal in the directory **containing** the extracted `creem-webhook-verify-worker-1.0.0` folder, then run:
+
+   ```sh
+   cd creem-webhook-verify-worker-1.0.0
+   node --version
+   node --no-warnings test.mjs
+   ```
+
+   If your extractor gave the folder a different name, use that name after `cd`. Run the Node command from **inside** the folder containing `worker.js`, `test.mjs` and `package.json`, not from the ZIP file or its parent directory.
+
+### Option B: clone the same version with Git
+
+From a directory where `creem-verifier-example` does not already exist:
 
 ```sh
+git clone --depth 1 --branch v1.0.0 https://github.com/yibao5056/creem-webhook-verify-worker.git creem-verifier-example
+cd creem-verifier-example
+node --version
 node --no-warnings test.mjs
 ```
 
-Expect **49 checks passed (offline logic)**. These use synthetic bodies and a public test placeholder, never real credentials.
-They cover valid/tampered signatures, uppercase hex, BOM and invalid UTF-8, malformed shapes, exact/over-size bodies, chunked reads, read failure, cancellation failure, configuration failure, method and route.
-They verify JavaScript logic, not a Cloudflare deployment, real Creem checkout or delivery.
+A Git "detached HEAD" notice is expected when checking out this tag; it does not prevent running the example. If the destination already exists, use a different new directory name in both commands, or open your existing copy deliberately.
+
+Both options select **v1.0.0**, currently commit `f248ddc847d1b53c624ca6a5b49943437911058c`. The [commit ZIP](https://github.com/yibao5056/creem-webhook-verify-worker/archive/f248ddc847d1b53c624ca6a5b49943437911058c.zip) linked on tinytank.app contains the same files, but its extracted folder ends with that full commit ID instead of `1.0.0`; enter that folder before running the Node commands. GitHub archives do not include Git history. This current getting-started page is newer than the README inside that preserved release; the verifier and checks are unchanged.
+
+### What success means
+
+The command prints individual `PASS` lines, ending with:
+
+```text
+49 checks passed (offline logic).
+```
+
+Once the source and Node are on your computer, this check needs **no `npm install`, network connection, credentials or local server**. Downloading the files and installing Node require network access. The checks use synthetic bodies and a public test placeholder, never real credentials. They cover valid/tampered signatures, uppercase hex, BOM and invalid UTF-8, malformed shapes, exact/over-size bodies, chunked reads, read failure, cancellation failure, configuration failure, method and route.
+
+This verifies JavaScript logic only. The synthetic "paid checkout" case is not a purchase: no Cloudflare endpoint is deployed, and no order or email is created. You can stop here after your first successful run; the local runtime and account setup below are optional next steps.
+
+### If the first run fails
+
+| What you see | What to check |
+| --- | --- |
+| `node` is not found, or the major version is below 22 | Install Node from the official link above, reopen the terminal, and run `node --version` again. |
+| Node cannot find `test.mjs` | You are usually in the parent or a different directory. Enter the extracted example folder containing that file. |
+| A missing `worker.js` or module-format error | Extract the complete archive, including `package.json`; do not run an isolated copied file. Check the Node version too. |
+| Git says the clone destination already exists | Choose another new folder name, or enter and inspect the existing copy. The ZIP option needs no Git. |
+| A check fails or there is no final success line | Keep it as a failed run. Note your Node version, the source version and the failing check; contact [support@tinytank.app](mailto:support@tinytank.app) with those details. Do not send secrets, signatures, customer data or real webhook bodies. |
 
 ## Try the local Workers runtime
 
-Use Node 22+ and npm. The pinned CLI below is also used by CI. Earlier instructions used Wrangler 4.143.0, whose bundled runtime cannot start this example's 2026-10-19 compatibility date:
+Run these commands from the same example folder, after the offline check above. This optional step uses Node 22+ and npm, needs network access to install Wrangler, and starts a local server. It needs no platform login or real signing secret. The pinned CLI below is also used by CI. Earlier instructions used Wrangler 4.143.0, whose bundled runtime cannot start this example's 2026-10-19 compatibility date:
 
 ```sh
 npx wrangler@4.151.3 dev --var CREEM_WEBHOOK_SECRET:public-test-placeholder
@@ -40,7 +84,7 @@ bash test.sh
 It uses only the fixed public placeholder; it does not read any signing secret from your shell.
 HTTP mode omits the misleading Content-Length, configuration-injection and stream-fault cases that require direct handler access.
 For another loopback port: `bash test.sh http://127.0.0.1:8788`. Non-loopback URLs are rejected.
-Stop the local server before using real endpoint secrets. Never register the public placeholder as a real webhook secret.
+Press **Ctrl+C** in the server terminal when finished. Stop the local server before using real endpoint secrets. Never register the public placeholder as a real webhook secret.
 
 ## Automated checks
 
