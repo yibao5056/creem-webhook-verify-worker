@@ -60,6 +60,8 @@ Once the source and Node are on your computer, this check needs **no `npm instal
 
 This verifies JavaScript logic only. The synthetic "paid checkout" case is not a purchase: no Cloudflare endpoint is deployed, and no order or email is created. You can stop here after your first successful run; the local runtime and account setup below are optional next steps.
 
+After trying the checks, you can [share your first-run result](#report-your-first-run-result-public).
+
 ### If the first run fails
 
 | What you see | What to check |
@@ -69,6 +71,28 @@ This verifies JavaScript logic only. The synthetic "paid checkout" case is not a
 | A missing `worker.js` or module-format error | Extract the complete archive, including `package.json`; do not run an isolated copied file. Check the Node version too. |
 | Git says the clone destination already exists | Choose another new folder name, or enter and inspect the existing copy. The ZIP option needs no Git. |
 | A check fails or there is no final success line | Keep it as a failed run. Note your Node version, the source version and the failing check; contact [support@tinytank.app](mailto:support@tinytank.app) with those details. Do not send secrets, signatures, customer data or real webhook bodies. |
+
+## Report your first-run result (public)
+
+Did the offline checks complete, or did one step stop you? A specific result helps me fix the right thing. This is optional; downloading and running the example still need no GitHub account.
+
+**Public on GitHub · GitHub sign-in required.** Opening the link does not submit a report. Review your text before choosing GitHub's submit action.
+
+[Report a first-run result on GitHub](https://github.com/yibao5056/creem-webhook-verify-worker/issues/new?title=%5BFirst+run%5D+v1.0.0%3A+add+your+result&body=Example+version+%2F+commit%3A+v1.0.0+%28change+if+different%29%0ANode+version+%28node+--version%29%3A%0AOS%3A%0AResult+%28completed+%2F+stuck%29%3A%0AStep+or+command%3A%0AExpected%3A%0AActual+%28short%2C+redacted+error+only%29%3A%0A%0AThis+is+a+public+report.+Do+not+include+secrets%2C+signatures%2C+headers%2C+webhook+bodies%2C+order+or+customer+information%2C+or+private+logs.)
+
+The draft has these fields:
+
+- Example version or commit: prefilled with `v1.0.0`; change it if you used another version.
+- Node version: the output of `node --version`.
+- Operating system.
+- Result: `completed` or `stuck`.
+- Step or command, expected result, and actual result. For a failure, include only a short, redacted error.
+
+Do not include secrets, signatures, request headers, webhook bodies, orders, customer information or private logs. Once you submit, save the issue URL to follow replies. A report exists only after GitHub shows that URL.
+
+If the link stops at sign-in, sign in to GitHub normally. If it cannot open, visit the repository's [Issues page](https://github.com/yibao5056/creem-webhook-verify-worker/issues), choose **New issue**, and use the fields above. English or Chinese reports are welcome.
+
+This public route is for the free verifier. For private purchase or account support, use [support@tinytank.app](mailto:support@tinytank.app).
 
 ## Try the local Workers runtime
 
