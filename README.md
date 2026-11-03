@@ -18,9 +18,30 @@ Creem can deliver the same event more than once. Signature validity alone does n
 
 You can try this example without a Cloudflare or Creem account. You need **Node.js 22 or later** on your computer. If `node --version` is unavailable or reports an older major version, install a supported release from the [official Node.js download page](https://nodejs.org/en/download), then open a new terminal.
 
-Choose **one** way to get the complete example. Do not copy just `worker.js`: the checks also need `test.mjs` and `package.json`.
+### Already downloaded or cloned this complete example?
 
-### Option A: download a ZIP, without Git
+**Start here. You do not need to download it again.** Extract your ZIP if needed, then open a terminal **inside the folder containing `worker.js`, `test.mjs` and `package.json`**. The folder name can vary with the archive or your extraction tool. Run:
+
+```sh
+node --version
+node --no-warnings test.mjs
+```
+
+Keep all nine example files, including this README. After the final `49 checks passed (offline logic).` line, continue with [what success means](#what-success-means), [first-run troubleshooting](#if-the-first-run-fails), the [optional test endpoint setup](#configure-your-own-test-endpoint-first), or [reporting your result](#report-your-first-run-result-public). The account and feedback instructions below travel with the example; you can read this file locally. Following external documentation or submitting a report still requires network access, and account setup needs your own accounts.
+
+### Need the complete example first?
+
+Get the **[complete current repository ZIP](https://github.com/yibao5056/creem-webhook-verify-worker/archive/refs/heads/main.zip)**, then extract it and follow “Already downloaded” above. This includes the repository's maintained English README, including first-run and account setup instructions. The `main` branch can advance; this link is not a fixed revision.
+
+For a fixed revision, the **[website download page](https://tinytank.app/products/creem-delivery-worker-starter/sample#first-run)** names the commit and extracted folder it currently offers. Its default may still be the preserved code-release archive while the documented download is being prepared. Check the named revision and README before choosing it; publication of this README alone does not mean the website has switched. The Chinese page supplies Chinese download and run instructions; the bundled README is in English.
+
+The verifier's **code version remains v1.0.0**, at code commit `f248ddc847d1b53c624ca6a5b49943437911058c`. A later documentation snapshot changes only this README; it is not a new verifier feature release. Check the exact documentation commit on the download page, and keep it with any result you report. A documentation commit's archive has a different folder name from the preserved release below.
+
+### Reproduce the preserved v1.0.0 release (optional)
+
+The two options below intentionally fetch the **older preserved release**, whose README predates this first-run guide. Choose one only if you want that historical snapshot. They are not required after downloading the current documented source. Do not copy just `worker.js`: the checks also need `test.mjs` and `package.json`.
+
+#### Option A: download a ZIP, without Git
 
 1. [Download the v1.0.0 source ZIP](https://github.com/yibao5056/creem-webhook-verify-worker/archive/refs/tags/v1.0.0.zip). This is the source archive linked under Assets on the [v1.0.0 release](https://github.com/yibao5056/creem-webhook-verify-worker/releases/tag/v1.0.0), with no signup or payment.
 2. Extract the ZIP. Open a terminal in the directory **containing** the extracted `creem-webhook-verify-worker-1.0.0` folder, then run:
@@ -33,7 +54,7 @@ Choose **one** way to get the complete example. Do not copy just `worker.js`: th
 
    If your extractor gave the folder a different name, use that name after `cd`. Run the Node command from **inside** the folder containing `worker.js`, `test.mjs` and `package.json`, not from the ZIP file or its parent directory.
 
-### Option B: clone the same version with Git
+#### Option B: clone the same version with Git
 
 From a directory where `creem-verifier-example` does not already exist:
 
@@ -46,7 +67,7 @@ node --no-warnings test.mjs
 
 A Git "detached HEAD" notice is expected when checking out this tag; it does not prevent running the example. If the destination already exists, use a different new directory name in both commands, or open your existing copy deliberately.
 
-Both options select **v1.0.0**, currently commit `f248ddc847d1b53c624ca6a5b49943437911058c`. The [commit ZIP](https://github.com/yibao5056/creem-webhook-verify-worker/archive/f248ddc847d1b53c624ca6a5b49943437911058c.zip) linked on tinytank.app contains the same files, but its extracted folder ends with that full commit ID instead of `1.0.0`; enter that folder before running the Node commands. GitHub archives do not include Git history. This current getting-started page is newer than the README inside that preserved release; the verifier and checks are unchanged.
+Both historical options select **v1.0.0**, commit `f248ddc847d1b53c624ca6a5b49943437911058c`. The [preserved code-commit ZIP](https://github.com/yibao5056/creem-webhook-verify-worker/archive/f248ddc847d1b53c624ca6a5b49943437911058c.zip) contains the same historical files, but its extracted folder ends with that full commit ID instead of `1.0.0`; enter that folder before running the Node commands. GitHub archives do not include Git history. The code, configuration and checks in the current documented source are identical to that preserved release; only its README is newer.
 
 ### What success means
 
