@@ -122,27 +122,66 @@ These are logic and local-runtime checks. A green run does not prove a real paym
 
 ## Configure your own test endpoint first
 
-Deployment requires your own Cloudflare authentication and your own Creem test webhook. It is not credential-free.
-The example config has separate `test` and `live` Worker names. Rename both to unique names for your account before deploying.
+This optional step needs **your own Cloudflare account, Creem account and endpoint signing secret**. The offline first run above needs none of them. Work from the extracted example directory, with Node/npm and network access for the public Wrangler CLI pinned to `4.151.3`.
 
-1. Authenticate the public Wrangler CLI using Cloudflare's supported login or protected token flow. Never commit credentials.
-2. Deploy the test Worker (it returns 503 until configured):
+The downloaded `wrangler.json` enables Cloudflare request logs and traces. The handler's no-logging statement does not disable platform observability; manage access permissions and retention for your deployment. See [Cloudflare Workers Logs](https://developers.cloudflare.com/workers/observability/logs/workers-logs/).
+
+### 1. Authenticate the intended Cloudflare account
+
+On your own computer with a browser:
+
+```sh
+npx wrangler@4.151.3 login
+npx wrangler@4.151.3 whoami
+```
+
+Complete Cloudflare authorization in your browser. If the browser does not open, use the authorization URL shown in your own terminal. Wait for login to finish, then run `whoami` and check the intended account. A URL alone is not success: stop on an authentication error or wrong account. If multiple accounts are available, confirm the deployment target.
+
+Do not share credentials, authorization URLs or full account output. A headless server or CI needs a protected token flow instead; see [Cloudflare authentication](https://developers.cloudflare.com/workers/wrangler/commands/general/#login).
+
+### 2. Register and configure the test endpoint
+
+1. In `wrangler.json`, change `env.test.name` and `env.live.name` to two different Worker names unique to your account. Keep explicit `--env` flags; omitting one can target the default Worker.
+2. Deploy only the test Worker:
 
    ```sh
    npx wrangler@4.151.3 deploy --env test
    ```
 
-3. In the Creem dashboard, select **Test Mode**, add the deployed test Worker's HTTPS URL plus `/webhooks/creem`, and select `checkout.completed`. Obtain that endpoint's signing secret there, then enter it through the interactive prompt:
+   A POST to `/webhooks/creem` returns 503 until its signing secret is configured. Opening the URL in a browser sends a GET, not a signed webhook test.
+
+3. In Creem **Test Mode**, use the Developers webhook area to register the deployed test Worker's **HTTPS URL plus `/webhooks/creem`**, selecting `checkout.completed`. Take that test endpoint's own signing secret, then enter it at the interactive prompt:
 
    ```sh
    npx wrangler@4.151.3 secret put CREEM_WEBHOOK_SECRET --env test
    ```
 
-   This is the **webhook signing secret**, not a Creem API key. Do not put it in arguments, screenshots, source or Git. Ignore local `.dev.vars`/`.env` files; a test value must not leak into your live environment.
-4. Complete a test checkout using Creem's current [Test Mode instructions](https://docs.creem.io/getting-started/test-mode). Check the dashboard's delivery result and endpoint response. A valid paid checkout returns `200 ok`. An unsigned request returns 401. Do not send the repository's synthetic test traffic to an endpoint wired to real fulfillment.
-5. Before adapting this for real purchases, implement and test the missing order/fulfillment safeguards above. Then deploy `--env live`, create a separate webhook in Creem **Live Mode**, and use `secret put CREEM_WEBHOOK_SECRET --env live` for its different signing secret. Never reuse the test URL or secret. This repository does not claim a real checkout or delivery E2E was run for your account.
+   This is the **webhook signing secret, not a Creem API key**. Do not put its value in arguments, source, Git, screenshots or messages. Do not use the public test placeholder as an endpoint secret. Keep `.dev.vars`/`.env` files ignored, and stop any placeholder-based local server before using endpoint credentials. `secret put` immediately updates the deployed Worker.
 
-`secret put` updates the deployed Worker. An `ok` in this verifier never means an email, download or persistent order exists.
+### 3. Check one test checkout and the same order's event
+
+1. Keep Creem **Test Mode** on. In Products, select your own one-time test product, or create one with your own test name, description and price. Do not use a live product or an earlier tinytank.app purchase link.
+2. Choose the product's **Share** action and open its payment link. Confirm the checkout's test-mode indicator, product and amount. Stop if any of these is unclear.
+3. Use a test email address you can read and synthetic billing details. The [official successful-payment test card](https://docs.creem.io/getting-started/test-mode#testing-payments), checked November 3, 2026, is `4111 1111 1111 1111`, with a future expiry and any test CVV. Use it only on a clearly identified test checkout; do not enter a real card.
+4. Submit one simulated payment, then find that product's paid test order in the test dashboard. Keep its order identifier privately. A success-page redirect alone is insufficient. If a timeout, challenge or uncertain result occurs, inspect the existing record before considering another attempt.
+5. In the configured **test webhook's delivery records**, find `checkout.completed` for the **same order**. Match `event.object.order.id` to that test order's identifier; checkout, product and event IDs are different fields. Confirm the destination was the test Worker's `/webhooks/creem` and the response was **`200 ok`**. If the order cannot be matched or the response body cannot be verified, leave this check unverified.
+
+`503` means the configured signing secret is absent, not a string or only whitespace. An incorrect nonempty secret normally leads to `401`; check this endpoint's secret and the original request bytes. `ignored`, an unrelated event or a generic 200 status does not verify this order's paid-checkout branch. This example **does not send email, store an order or grant a download**. Do not send its synthetic test traffic to an endpoint connected to real fulfillment.
+
+Sources: [Creem product and Share payment links](https://docs.creem.io/getting-started/quickstart#no-code-solution), [Test Mode](https://docs.creem.io/getting-started/test-mode) and [webhook registration and signatures](https://docs.creem.io/code/webhooks). The guide and historical CI have not run an account checkout or delivery test for you.
+
+### 4. Add fulfillment safeguards before going live
+
+First implement and test durable order storage, duplicate/replay handling, expected product, amount, currency and account validation, access granting and delivery. Do not put an email/download action directly in this verifier's current `ok` branch.
+
+Only after those safeguards work, deploy the separate live Worker. In Creem **Live Mode**, register its different HTTPS endpoint and configure that live endpoint's **different signing secret**:
+
+```sh
+npx wrangler@4.151.3 deploy --env live
+npx wrangler@4.151.3 secret put CREEM_WEBHOOK_SECRET --env live
+```
+
+Keep Worker name, URL, Creem mode and signing secret aligned; changing only the product does not switch the endpoint or secret. Any database, storage or mail service you add needs explicit test isolation and its own complete acceptance. See [Cloudflare environments](https://developers.cloudflare.com/workers/wrangler/environments/) and [secret deployment behavior](https://developers.cloudflare.com/workers/configuration/secrets/). An `ok` still means receipt only, never fulfillment.
 
 ## Input and response policy
 
