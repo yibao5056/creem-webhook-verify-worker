@@ -14,6 +14,18 @@ There is no deduplication, replay protection, product/amount validation, account
 Do not grant access by pasting a side effect into this handler: first implement durable, idempotent order processing and validate the expected product, amount, currency and account.
 Creem can deliver the same event more than once. Signature validity alone does not prove a new purchase or permission to fulfill.
 
+## Try in your browser — no Node required
+
+**[Download the browser demo ZIP](https://github.com/yibao5056/creem-webhook-verify-worker/releases/download/browser-demo-2026-11-06/creem-verifier-browser-demo.zip)** · [Release and checksum](https://github.com/yibao5056/creem-webhook-verify-worker/releases/tag/browser-demo-2026-11-06)
+
+Extract the whole ZIP, keep its files together, and open **`en.html`** (English) or **`zh.html`** (中文). Choose **Run three examples**. You should see `200 ok`, `401 bad signature`, and `400 bad json` calculated from public synthetic data. Reset to run again; the language link switches between the two local files.
+
+This MIT browser demo needs no Node, account or signing key. The calculations work offline in a compatible browser with JavaScript and Web Crypto. Some browsers restrict local files; if the buttons stay unavailable, follow the source-download and Node instructions included in the HTML file. External links and optional reports need network access; GitHub reports require sign-in and are public.
+
+These are **three browser examples, separate from the 49 Node checks below**. They do not make a payment, save an order or deliver a purchase. The code baseline remains **v1.0.0**, commit `f248ddc847d1b53c624ca6a5b49943437911058c`. The browser bundle was built November 6, 2026; this attachment is not a new verifier code version. Choose the named **`creem-verifier-browser-demo.zip`** asset: GitHub's automatic **Source code** archives contain the Node example instead.
+
+中文：下载上面的浏览器示例 ZIP，完整解压并保留同一文件夹里的文件，打开 `zh.html`，点“运行三个示例”。可以重置、重跑和在本地切换语言；不需要 Node、账号或密钥。只运行三个合成场景，不是49项 Node 检查或实际付款、订单、发货测试。若浏览器限制本地文件，可按文件内的源码下载与 Node 步骤继续。
+
 ## First run: download, open the folder, check the verifier
 
 You can try this example without a Cloudflare or Creem account. You need **Node.js 22 or later** on your computer. If `node --version` is unavailable or reports an older major version, install a supported release from the [official Node.js download page](https://nodejs.org/en/download), then open a new terminal.
