@@ -129,10 +129,10 @@ This public route is for the free verifier. For private purchase or account supp
 
 ## Try the local Workers runtime
 
-Run these commands from the same example folder, after the offline check above. This optional step uses Node 22+ and npm, needs network access to install Wrangler, and starts a local server. It needs no platform login or real signing secret. The pinned CLI below is also used by CI. Earlier instructions used Wrangler 4.143.0, whose bundled runtime cannot start this example's 2026-10-19 compatibility date:
+Run these commands from the same example folder, after the offline check above. This optional step uses Node 22+ and npm, needs network access to install Wrangler, and starts a local server. It needs no platform login or real signing secret. The pinned CLI below is also used by CI. This pin includes the Undici 7.30.1 update described in the [upstream release notes](https://github.com/cloudflare/workers-sdk/releases/tag/wrangler%404.153.0). Earlier instructions used Wrangler 4.143.0, whose bundled runtime cannot start this example's 2026-10-19 compatibility date:
 
 ```sh
-npx wrangler@4.151.3 dev --var CREEM_WEBHOOK_SECRET:public-test-placeholder
+npx wrangler@4.153.0 dev --var CREEM_WEBHOOK_SECRET:public-test-placeholder
 # In another terminal, from the same directory:
 bash test.sh
 ```
@@ -147,7 +147,7 @@ Press **Ctrl+C** in the server terminal when finished. Stop the local server bef
 
 [Open the public check runs](https://github.com/yibao5056/creem-webhook-verify-worker/actions/workflows/verify.yml) and select a run to see its exact commit and logs. The workflow runs on pushes to `main`, pull requests targeting `main`, and manual dispatch. The badge shows the latest `main` result, not a guarantee about every downloaded revision.
 
-It runs the existing **49 offline checks**, then starts a temporary, loopback-only Workers runtime and runs **40 HTTP checks**. Node is pinned to 24.21.0, Wrangler to 4.151.3, and the two official setup actions to full commit hashes. npm still resolves Wrangler's transitive dependencies at installation time; this is not a fully locked toolchain. The runner needs network access to install tools.
+It runs the existing **49 offline checks**, then starts a temporary, loopback-only Workers runtime and runs **40 HTTP checks**. Node is pinned to 24.21.0, Wrangler to 4.153.0, and the two official setup actions to full commit hashes. npm still resolves Wrangler's transitive dependencies at installation time; this is not a fully locked toolchain. The runner needs network access to install tools.
 
 The standard Ubuntu runner uses only the public synthetic placeholder and a read-only repository token for checkout; checkout does not persist that token. No Cloudflare or Creem credentials, remote bindings or deployment are used. Startup readiness, each HTTP request, the test commands and the job are bounded. The HTTP step verifies process-group cleanup on ordinary exit and handled interrupts; an abrupt hard kill relies on GitHub discarding the temporary runner. A failed check makes the job fail. No Actions cache or downloadable workflow artifact is uploaded.
 
@@ -155,7 +155,7 @@ These are logic and local-runtime checks. A green run does not prove a real paym
 
 ## Configure your own test endpoint first
 
-This optional step needs **your own Cloudflare account, Creem account and endpoint signing secret**. The offline first run above needs none of them. Work from the extracted example directory, with Node/npm and network access for the public Wrangler CLI pinned to `4.151.3`.
+This optional step needs **your own Cloudflare account, Creem account and endpoint signing secret**. The offline first run above needs none of them. Work from the extracted example directory, with Node/npm and network access for the public Wrangler CLI pinned to `4.153.0`.
 
 The downloaded `wrangler.json` enables Cloudflare request logs and traces. The handler's no-logging statement does not disable platform observability; manage access permissions and retention for your deployment. See [Cloudflare Workers Logs](https://developers.cloudflare.com/workers/observability/logs/workers-logs/).
 
@@ -164,8 +164,8 @@ The downloaded `wrangler.json` enables Cloudflare request logs and traces. The h
 On your own computer with a browser:
 
 ```sh
-npx wrangler@4.151.3 login
-npx wrangler@4.151.3 whoami
+npx wrangler@4.153.0 login
+npx wrangler@4.153.0 whoami
 ```
 
 Complete Cloudflare authorization in your browser. If the browser does not open, use the authorization URL shown in your own terminal. Wait for login to finish, then run `whoami` and check the intended account. A URL alone is not success: stop on an authentication error or wrong account. If multiple accounts are available, confirm the deployment target.
@@ -178,7 +178,7 @@ Do not share credentials, authorization URLs or full account output. A headless 
 2. Deploy only the test Worker:
 
    ```sh
-   npx wrangler@4.151.3 deploy --env test
+   npx wrangler@4.153.0 deploy --env test
    ```
 
    A POST to `/webhooks/creem` returns 503 until its signing secret is configured. Opening the URL in a browser sends a GET, not a signed webhook test.
@@ -186,7 +186,7 @@ Do not share credentials, authorization URLs or full account output. A headless 
 3. In Creem **Test Mode**, use the Developers webhook area to register the deployed test Worker's **HTTPS URL plus `/webhooks/creem`**, selecting `checkout.completed`. Take that test endpoint's own signing secret, then enter it at the interactive prompt:
 
    ```sh
-   npx wrangler@4.151.3 secret put CREEM_WEBHOOK_SECRET --env test
+   npx wrangler@4.153.0 secret put CREEM_WEBHOOK_SECRET --env test
    ```
 
    This is the **webhook signing secret, not a Creem API key**. Do not put its value in arguments, source, Git, screenshots or messages. Do not use the public test placeholder as an endpoint secret. Keep `.dev.vars`/`.env` files ignored, and stop any placeholder-based local server before using endpoint credentials. `secret put` immediately updates the deployed Worker.
@@ -210,8 +210,8 @@ First implement and test durable order storage, duplicate/replay handling, expec
 Only after those safeguards work, deploy the separate live Worker. In Creem **Live Mode**, register its different HTTPS endpoint and configure that live endpoint's **different signing secret**:
 
 ```sh
-npx wrangler@4.151.3 deploy --env live
-npx wrangler@4.151.3 secret put CREEM_WEBHOOK_SECRET --env live
+npx wrangler@4.153.0 deploy --env live
+npx wrangler@4.153.0 secret put CREEM_WEBHOOK_SECRET --env live
 ```
 
 Keep Worker name, URL, Creem mode and signing secret aligned; changing only the product does not switch the endpoint or secret. Any database, storage or mail service you add needs explicit test isolation and its own complete acceptance. See [Cloudflare environments](https://developers.cloudflare.com/workers/wrangler/environments/) and [secret deployment behavior](https://developers.cloudflare.com/workers/configuration/secrets/). An `ok` still means receipt only, never fulfillment.
